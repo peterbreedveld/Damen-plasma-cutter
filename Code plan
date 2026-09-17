@@ -1,0 +1,10 @@
+Input:
+afmetingen en type profiel van de balk
+locatie en pad van elke cut
+
+(Met 1 conveyor)
+Balk ligt op conveyor, laat conveyor lopen tot eerste snijplek in range is van robotarm
+Klem balk en vind (of weet) waar het snijden/tekenen begint
+stuur robotarm in pad van snijpatroon, terug naar home (weg bij balk)
+klem laat los en conveyor brengt balk verder tot de volgende snijplek in range is van robotarm
+repeat tot alle stukken uit de balk zijn gehaald
