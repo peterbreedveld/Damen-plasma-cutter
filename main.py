@@ -1,52 +1,113 @@
-from geometry.typecuts import Path2D, type0, type1, type6, type5, type3, type11
-#from geometry.profiles import plat_profiel, hp_profiel
+from HumanInterface import DamenPlasmaHMI
+from geometry.profiles import Profile
 from config.settings import *
 from universalcontrol import URControl
-from geometry.path import CutPath
 from planning.planner import RobotPlanner
-
+from geometry.typecuts import *
+import threading
+import tkinter as tk
 
 import numpy as np
-import copy
-import time
+
+job_condition = threading.Condition()
+job_data = None
+start_requested = False
+shutdown_requested = False
+
 
 ### TO-DO's
-# Voeg Hoek profiel toe
-# Voeg type9 toe\
-# Maak meerdere cuts per bar mogelijk
 # Maak gehele main loop met inpunts en outputs
-# Cuts moeten inverteerbaar zijn
+# Maak type9 voor andere kant van de balk en
+# Maak de angles voor rectangle balk
 
 
+# Initialiseer robot
 robot_ip = "192.168.0.43"  
-home1 = [-0.357, 0.499, 0.223, 3.14, 0, 0]
-home2 = [-0.402, 0.514, 0.102, 3.14, 0, 0] # Gebruik deze voor opstelling
-
-
+home = [-0.091, 0.786, 0.0946, 0, 0, 0]
+'''
 robot = URControl(robot_ip)
 robot.connect()
 
-robot.set_tcp(BLUE_PIPE_OFFSET)
+robot.set_tcp(PINK_ANGLEPRINT_OFFSET)
+'''
+#EXECUTION
+def interface_loop():
+    root = tk.Tk()
+    global app
+    app = DamenPlasmaHMI(
+        root,
+        on_job_submitted=receive_job,
+        on_start=signal_start,
+    )
 
-loca = robot.get_tcp_pos() # Eenmalig
-print(loca)
+    def close_interface():
+        signal_shutdown()
+        root.destroy()
+
+    root.protocol("WM_DELETE_WINDOW", close_interface)
+    root.mainloop()
+
+
+def receive_job(data):
+    global job_data
+    with job_condition:
+        job_data = data
+        job_condition.notify_all()
+
+
+def signal_start():
+    global start_requested
+    with job_condition:
+        start_requested = True
+        job_condition.notify_all()
+
+
+def signal_shutdown():
+    global shutdown_requested
+    with job_condition:
+        shutdown_requested = True
+        job_condition.notify_all()
 
 
 
+def robot_loop():
+    global job_data
+    try:
+        with job_condition:
+            job_condition.wait_for(
+                lambda: shutdown_requested or (job_data is not None and start_requested)
+            )
+            if shutdown_requested:
+                return
+            received_job = job_data
 
-zes = type6(width=0.08, Y=50)
-zes.hp_add_reference_points(width=0.080)
+        print("Opdracht ontvangen:", received_job)
+        profile = Profile(**received_job["profiel_args"])
+        for cut_args in received_job["cut_args"]:
+            profile.add_cut(**cut_args)
 
-pad6 = CutPath(zes)
-pad6.create_hp_profile(0.08, 0.005)
+        #planner = RobotPlanner(robot, home, profile) # Home is the corner van de balk
+        #planner.create_robot_paths() # Converts path to robot coordinates
+        #planner.execute_cut()
+    finally:
+        None
+        #robot.stop_robot_control()
 
-planner = RobotPlanner(robot, home2) # Home is de hoek van de balk
-
-planner.create_robot_path(pad6)
-
-planner.execute_cut()
+    
+t1 = threading.Thread(target=interface_loop)
+t2 = threading.Thread(target=robot_loop)
 
 
-#robot.move_l(home2, speed=0.01)
+t1.start()
+t2.start()
+t1.join()
+t2.join()
 
-robot.stop_robot_control()
+# Startknop start conveyor tot balk bij locatie bij arm
+# In: positie van de balk
+
+# Clamp pistons
+# Execute cut 1
+# Out: Move conveyor x steps/x distance
+# 
+# repeat for every cut
