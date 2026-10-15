@@ -46,6 +46,10 @@ class URControl:
         self.rtde_ctrl.stopScript()
         logging.info("Stopped connection with robot")
 
+    def digital_emergency_stop(self):
+        self.rtde_ctrl.stopScript()
+        print("Emergency stop activated. Robot script stopped.")
+
 
     def set_tool_frame(self, tool_frame):
         try:
@@ -78,12 +82,15 @@ class URControl:
 
     def move_l(self, pos, speed=0.5, acc=0.5):
         try:
+            print('Moving to node: ', pos)
             self.rtde_ctrl.moveL(pos, speed, acc)
+            
         except Exception as e:
             logging.error(f"Cannot move: {e}")
 
     def move_l_path(self, path):
         try:
+            print('Moving along path:', path)
             self.rtde_ctrl.moveL(path)
         except Exception as e:
             logging.error(f"Cannot move: {e}")
