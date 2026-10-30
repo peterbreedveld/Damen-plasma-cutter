@@ -82,7 +82,6 @@ class URControl:
 
     def move_l(self, pos, speed=0.5, acc=0.5):
         try:
-            print('Moving to node: ', pos)
             self.rtde_ctrl.moveL(pos, speed, acc)
             
         except Exception as e:
@@ -90,7 +89,6 @@ class URControl:
 
     def move_l_path(self, path):
         try:
-            print('Moving along path:', path)
             self.rtde_ctrl.moveL(path)
         except Exception as e:
             logging.error(f"Cannot move: {e}")

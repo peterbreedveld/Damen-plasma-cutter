@@ -34,6 +34,12 @@ class Profile:
     def __getitem__(self, cut_number):
           return self.cuts[cut_number]
 
+    def __repr__(self):
+        return f"Profile(type={self.profile_type}, width={self.width}, thickness={self.thickness}, length={self.length}, height={self.height}, cuts={self.cuts})"
+
+    def __str__(self):
+        return str(self.cuts)
+
 
 
     def add_cut(self,cuttype,position=0,side=None,Y=None,X=None,Angle=None,lengthwise=None,H=None,A=None):
@@ -64,8 +70,4 @@ class Profile:
         
         self.cuts.append(cut)
 
-
-
-
-
-    
+     

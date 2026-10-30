@@ -12,18 +12,19 @@ from geometry.typecuts import *
 from esp_communication import ESP32Communicator
 
 ### TO-DO's
-# Maak type9 voor andere kant van de balk
-# Maak de angles voor rectangle balk
+# TODO type9 voor andere kant van de balk
+# TODO Profiel verder of minder ver duwen afhangkelijk van l of r snijkant (schuin snijden, dus ruimte voor robot pols)
+# TODO Alles testen met nieuwe end effector (misschien widthwise v-cut versimpelen dan)
 
 ROBOT_IP = "192.168.0.43"
-HOME = [-0.091, 0.786, 0.0946, 0, 0, 0]   # Home is de hoek van de balk
+HOME = [-0.3401, 0.7702, 0.0946, 0, 0, 0]   # Home is de hoek van de balk
 
 # --- Initialiseer robot en overige componenten ---
 robot = URControl(ROBOT_IP)
 robot.connect()
-robot.set_tcp(PINK_ANGLEPRINT_OFFSET)
+robot.set_tcp(MARKER_ENDEFFECTOR_OFFSET)
 
-esp = ESP32Communicator(port=SERIAL_PORT)
+esp = ESP32Communicator(port=SERIAL_PORT, pulses_per_mm=ENCODER_STEPS_PER_MM)
 
 # --- Communicatie tussen HMI (hoofdthread) en robotthread ---
 jobs = queue.Queue()         # HMI -> robot. Een opdracht per START, None = afsluiten
@@ -54,44 +55,68 @@ def robot_loop():
 
         try:
             profile = Profile(**job["profiel_args"])
+
+
             for cut_args in job["cut_args"]:
                 profile.add_cut(**cut_args)
 
             print(profile)
-            # TODO: planner aanmaken en paden berekenen
-            # planner = RobotPlanner(robot, HOME, profile)
-            # planner.create_robot_paths()   # zet pad om naar robotcoordinaten
+
+            planner = RobotPlanner(robot, HOME, profile)
+            planner.move_to_rest_pos()
+            estop.wait(2)
 
             esp.stuur_commando("Pneumatic_Sys_ON")
+            estop.wait(0.1)
             esp.stuur_commando("CLAMP_1_OFF")
+            estop.wait(0.1)
             esp.stuur_commando("CLAMP_2_OFF")
+            estop.wait(0.1)
+            esp.stuur_commando("CLAMP_3_ON")
+            estop.wait(2)
 
-            nul_positie = esp.move_until_gate(max_pulses=100000, timeout=30)
-            print(nul_positie)
+            print('Conveyor beweegt naar nulpositie:')
+            nul_positie = esp.find_profile_front(max_mm=2000)
+            estop.wait(2)
 
             for i, cut_args in enumerate(job["cut_args"]):
                 if estop.is_set():
                     break
-                hmi.set_actieve_snede(i)     # toont in de HMI welke snede nu bezig is
+                hmi.set_actieve_snede(i)     # toont in de HMI welke snede nu bezig is 
 
-                #Check claude code en continue process
-                CUTTING_DISTANCE_FROM_CONVEYOR+END_WASTE
-                # 1. Conveyor: balk naar de juiste positie brengen
-                print(f"[{i + 1}] TODO conveyor verplaatsen")
-                estop.wait(1)                # vervang door echte aansturing
+                print('Conveyor beweegt tot juiste snijpositie')
+                cut_start = CUTTING_DISTANCE_FROM_CONVEYOR
+                extra_distance = 0
+                if cut_args['side']=='left' and cut_args['cuttype']=='v_cut':
+                    extra_distance += 0.1
 
-                # 2. Clamp pistons dicht
-                print(f"[{i + 1}] TODO clamps dicht")
+                overshoot = 0.001 * esp.move_front_to(1000*(CUTTING_DISTANCE_FROM_CONVEYOR+extra_distance + profile[i].at_position + profile[i].cut_width))
+                print('Moving front to:', (cut_start + profile[i].at_position + profile[i].cut_width))
                 estop.wait(1)
 
-                # 3. Snede uitvoeren
-                print(f"[{i + 1}] TODO snijden: {cut_args}")
-                # planner.execute_cut()      # eventueel per snede, afhankelijk van je planner
+                print('Clamps gaan dicht')
+                esp.stuur_commando("CLAMP_1_ON")
+                estop.wait(0.1)
+                esp.stuur_commando("CLAMP_2_ON")
+                estop.wait(1)
+                esp.stuur_commando("CLAMP_3_OFF")
+                estop.wait(4)
+
+                print('Robotarm gaat nu snijden op positie:', overshoot+extra_distance+CUTTING_DISTANCE_FROM_CONVEYOR)
+                planner = RobotPlanner(robot, HOME, profile)
+                planner.create_robot_path(profile[i], offset=overshoot+extra_distance+CUTTING_DISTANCE_FROM_CONVEYOR)
+                planner.execute_cut()
                 estop.wait(1)
 
-                # 4. Clamp pistons open
-                print(f"[{i + 1}] TODO clamps open")
-                estop.wait(1)
+                print('Clamps gaan open')
+                esp.stuur_commando("CLAMP_3_ON")
+                estop.wait(5)
+                esp.stuur_commando("CLAMP_1_OFF")
+                estop.wait(0.1)
+                esp.stuur_commando("CLAMP_2_OFF")
+                estop.wait(2)
+
+            esp.move_front_to(1000*profile.length)
 
             if not estop.is_set():
                 hmi.snijden_klaar()
@@ -109,7 +134,6 @@ hmi = DamenPlasmaHMI(root,on_job_submitted=laatste_job.update,on_start=on_start,
 
 robot_thread = threading.Thread(target=robot_loop, daemon=True)
 robot_thread.start()
-robot.move_l(HOME, speed=0.02, acc=0.5)  # naar homepositie
 
 root.mainloop()                            # Tk draait in de hoofdthread
 

@@ -42,7 +42,7 @@ PROFIELEN = {
             },
             "Type 85": {
                 "cuttype": "type85",
-                "params": [Param("Y(angle)", "A", "float"), ZIJDE],
+                "params": [ORIENTATIE, Param("Y(angle)", "A", "float"), ZIJDE],
             },
         },
     },

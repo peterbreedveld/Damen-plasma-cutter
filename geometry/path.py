@@ -24,7 +24,7 @@ class Node:
         return str([self.x, self.y, self.z, self.rx, self.ry, self.rz])
 
     def __repr__(self):
-        return f"Node(x={self.x}, y={self.y}, z={self.z}, rx={self.rx}, ry={self.ry}, rz={self.rz})"
+        return f"\nNode(x={self.x}, y={self.y}, z={self.z}, rx={self.rx}, ry={self.ry}, rz={self.rz})"
 
 
 
@@ -35,6 +35,9 @@ class CutPath:
         self.path3d = path_3d
         self.path6d = None
         self.at_position = None
+        self.min_x_value = min(node.x for node in path_3d)
+        self.max_x_value = max(node.x for node in path_3d)
+        self.cut_width = self.max_x_value - self.min_x_value
 
         self.profile_type = profile.profile_type
         self.width = profile.width
@@ -52,6 +55,9 @@ class CutPath:
     
     def __str__(self):
         return str(self.path6d)
+    
+    def __repr__(self):
+        return f"\nCutPath met path6d: {self.path6d}"
 
 
     def reverse(self):
@@ -73,12 +79,14 @@ class CutPath:
         
 
     def make_hp_6d(self):
+        print("Make_hp_6d wordt gecalled")
         self.path6d = []
         for node in self.path3d:
+
             if node.speed is not None:
                 speed = node.speed
             else:
-                speed = self.cut_speed
+                speed = self.cut_speed*(self.thickness/node.z)
             
             self.path6d.append(Node(node.x, node.y, node.z, 0, np.pi, 0, speed, ACC, SMOOTHNESS))
 
@@ -98,6 +106,11 @@ class CutPath:
             else:
                 speed = self.cut_speed
 
+            if SMOOTHNESS is not None:
+                blend = node.blend
+            else:
+                blend = SMOOTHNESS
+
             self.path6d.append(Node(node.x, node.y, node.z, rx, 0, 0, speed, ACC, SMOOTHNESS))
 
 
@@ -109,10 +122,11 @@ class CutPath:
 
             if node.speed is not None:
                 speed = node.speed
+                
             else:
                 speed = self.cut_speed
 
-            self.path6d.append(Node(node.x, node.y, node.z, 0, 0, 0, speed, ACC, SMOOTHNESS))
+            self.path6d.append(Node(node.x, node.y, node.z, node.rx, node.ry, node.rz, speed, ACC, SMOOTHNESS))
 
 
 
