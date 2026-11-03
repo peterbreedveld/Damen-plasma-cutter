@@ -1,27 +1,34 @@
 # Behaviour configuration
 END_WASTE = 0.01
 START_OFFSET = 0.01
-NOZZLE_DISTANCE = 0.0043
+#NOZZLE_DISTANCE = 0.0023 # Voor HP balken goed ???
+NOZZLE_DISTANCE = 0.0015 # Voor Rect en Angle balken goed
+
+
+# Settings
+SAFE_SPEED = 0.4
+APPROACH_SPEED = 0.01
+#CORNER_SPEED = 0.15
+CORNER_SPEED = 0.25 # Voor de Rect balken goed
+SPEED_PER_THICKNESS = {0.002:0.015, 0.0033:0.015, 0.004:0.015, 0.0044:0.015, 0.005:0.015, 0.015:0.007}
+
+ACC = 1
+SMOOTHNESS = 0.001 # Cirkel om node heen waar pad doorheen wordt gesmooth (blend radius voor xy veranderingen)
+CURVE = 0.002 # Blend radius voor Z verandering
 
 
 # Environment configuration
 SERIAL_PORT = "COM3"
-HOME = [-0.3401, 0.7702, 0.0946, 0, 0, 0]
-BLUE_PIPE_OFFSET = [0.01971, 0.00202, 0.1253, 0.6484, -0.1938, 3.0477]
-ANGLE_PRINT_OFFSET = [0.0879, -0.0667, 0.1461, 1.5713, 0.3712, 0.8294]
-PINK_ANGLEPRINT_OFFSET = [-0.0418, 0.0576, 0.150, 0.295, -0.949, -2.229]
+ROBOT_IP = "192.168.0.43"
+HOME = [-0.3408166924541298, 0.7682243848336712, 0.09463601540163476, 0, 0, 0]
 MARKER_ENDEFFECTOR_OFFSET = [-0.05623, 0, 0.14853, 0.7884, -0.7227, -1.5267]
 
 ENCODER_STEPS_PER_MM = 6.31
 CUTTING_DISTANCE_FROM_CONVEYOR = 0.15
 
 
-# Settings
-SAFE_SPEED = 0.15
-APPROACH_SPEED = 0.01
-CORNER_SPEED = 0.15
-SPEED_PER_THICKNESS = {0.002:0.015, 0.0033:0.015, 0.005:0.015, 0.015:0.007}
-
-ACC = 1
-SMOOTHNESS = 0.001 # Cirkel om node heen waar pad doorheen wordt gesmooth (blend radius voor xy veranderingen)
-CURVE = 0.002 # Blend radius voor Z verandering
+# Old end effectors
+BLUE_PIPE_OFFSET = [0.01971, 0.00202, 0.1253, 0.6484, -0.1938, 3.0477]
+ANGLE_PRINT_OFFSET = [0.0879, -0.0667, 0.1461, 1.5713, 0.3712, 0.8294]
+PINK_ANGLEPRINT_OFFSET = [-0.0418, 0.0576, 0.150, 0.295, -0.949, -2.229]
+OLD_MARKER_ENDEFFECTOR_OFFSET = [-0.005668, -0.00067, 0.14877, 0.7704, -0.7504, -1.4578]

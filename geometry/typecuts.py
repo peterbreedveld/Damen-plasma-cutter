@@ -6,8 +6,8 @@ from geometry.path import Node
 
 def hp_type6(width, thickness, height=None, Y=0, side='right', H=0.006):
     bulb_height = 0.21*width
-    bulb_width = 0.18*width
-    bulb_peak_width = 0.08*width
+    bulb_width = 0.18*width*0.9
+    bulb_peak_width = 0.08*width*0.9
     
     a = tan(Y*pi/180)
     
@@ -24,10 +24,13 @@ def hp_type6(width, thickness, height=None, Y=0, side='right', H=0.006):
 
     pad = [c1, c2, c3, c4, c5]
 
+
+    less_offset = a*START_OFFSET if Y<0 else 0
+
     if side =='right':
-        offset = max(c.x for c in pad)
+        offset = max(c.x for c in pad) + less_offset
     elif side == 'left':
-        offset = min(c.x for c in pad)
+        offset = min(c.x for c in pad) + less_offset
             
     for c in pad:
         c.x -= offset
@@ -102,6 +105,7 @@ def hp_type9(width, thickness, height=None, Y=0, side='right', H=0.006, plate_sh
     pad = [Node(x, y, z_of(y)) for x, y in cleaned]
 
     # --- x-offset zodat het profiel tegen x = 0 ligt ---
+
     if side == 'right':
         offset = max(c.x for c in pad)
     else:
@@ -134,11 +138,14 @@ def angle_type11(width, height, thickness, X, Y, Angle, H=0.006, side='right'):
 
     pad = [c1, c2, c3, c4, c5, c6, c7]
 
+
     if side =='right':
         offset = max(c.x for c in pad)
     elif side == 'left':
         offset = min(c.x for c in pad)
-            
+
+   
+
     for c in pad:
         c.x -= offset
 
@@ -160,14 +167,6 @@ def angle_type83(width, height, thickness, side='right'):
     c1 = Node(multiplier*tan(pi/3)*(width-thickness-0.01+START_OFFSET), width+ START_OFFSET, -NOZZLE_DISTANCE, speed=SAFE_SPEED)
 
     pad = [c1, c2, c3, c4, c5, c6, c7]
-
-    if side =='right':
-        offset = max(c.x for c in pad)
-    elif side == 'left':
-        offset = min(c.x for c in pad)
-            
-    for c in pad:
-        c.x -= offset
 
     return pad
 
@@ -215,15 +214,15 @@ def rect_v_cut(width, height, thickness=None, lengthwise=True, side="right"):
     if side == 'left':
         c7.speed = 2*CORNER_SPEED
         pad = [c1, c2, c3, c4, c5, c7, c8, c9, c10, c11]
-        offset = min(c.x for c in pad)
     elif side == 'right':
         pad = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11]
-        offset = max(c.x for c in pad)
         
+
     for c in pad:
-        c.x -= offset
+        c.x += multiplier*NOZZLE_DISTANCE
 
     return pad
+
 
 def rect_type85(width, height, A, thickness=None, lenthwise=True, side='right'):
     # TODO Deze unit programmeren

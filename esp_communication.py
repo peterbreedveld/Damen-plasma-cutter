@@ -232,6 +232,14 @@ class ESP32Communicator:
             self.ser.close()
             print("Seriële verbinding gesloten.")
 
+    def reset(self):
+        """Reset the ESP32 and the encoder count. The zero point is lost."""
+        self._gate_armed = True
+        self.stuur_commando("GATE_IGNORE_OFF")
+        self.stuur_commando("RESET")
+
+        self.zero_count = None
+
 
 # --- Test Script ---
 if __name__ == "__main__":

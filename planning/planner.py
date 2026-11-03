@@ -37,12 +37,12 @@ class RobotPlanner:
 
 
     def _add_points_HP_cut(self, offset=0):
-        a = [[offset-0.1, -0.1, 0.01, 0, -0.5*np.pi, 0],
+        a = [[offset-0.05, -0.1, 0.01, 0, -0.5*np.pi, 0],
              [offset, -0.05, 0.05, 0, np.pi, 0],
-             [offset, 0.05, 0.05, 0, np.pi, 0]]
+             [offset, 0.05, 0.03, 0, np.pi, 0]]
         
         r = [[offset, -0.02, 0.05, 0, np.pi, 0],
-             [offset-0.1, -0.1, 0.05, 0, -0.5*np.pi, 0],
+             [offset-0.05, -0.1, 0.05, 0, -0.5*np.pi, 0],
              [offset, -0.05, -0.05, 0, 0, 0]]
 
         for node in a:
@@ -82,11 +82,9 @@ class RobotPlanner:
             self._add_points_square_cut(offset=offset)
 
 
-
-
-    def execute_cut(self):
+    def approach_cut(self):
         robot_rest_pos = self.robot.add_home(self.home, self.rest_pos)
-
+        
         self.robot.move_l(robot_rest_pos, SAFE_SPEED)
         time.sleep(1)
 
@@ -94,13 +92,19 @@ class RobotPlanner:
             self.robot.move_l(node, SAFE_SPEED)
             time.sleep(0.1)
 
-        self.robot.move_l_path(self.robot_cutpath)
-        time.sleep(1)
+        self.robot.move_l(self.robot.cutpath[0][:6], SAFE_SPEED)
 
+    def execute_cut(self):
+        self.robot.move_l_path(self.robot_cutpath)
+
+
+    def retreat_cut(self):
+        robot_rest_pos = self.robot.add_home(self.home, self.rest_pos)
+        
         for node in self.retreat_positions:
             self.robot.move_l(node, SAFE_SPEED)
             time.sleep(0.1)
-
+        
         self.robot.move_l(robot_rest_pos, SAFE_SPEED)
 
     def move_to_rest_pos(self):

@@ -3,6 +3,7 @@ import threading
 import traceback
 import tkinter as tk
 import time
+import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from HumanInterface import DamenPlasmaHMI
@@ -15,30 +16,39 @@ from esp_communication import ESP32Communicator
 
 from geometry.path import CutPath
 
-estop = threading.Event()
-esp = ESP32Communicator(port=SERIAL_PORT, pulses_per_mm=ENCODER_STEPS_PER_MM, settle_tolerance=10)
+# estop = threading.Event()
+# esp = ESP32Communicator(port=SERIAL_PORT, pulses_per_mm=ENCODER_STEPS_PER_MM, settle_tolerance=10)
+# esp.find_profile_front(max_mm=2000)
+# esp.move_mm(50)
+# esp.stuur_commando("Pneumatic_Sys_ON")
+# estop.wait(1)
+# esp.stuur_commando("CLAMP_1_ON")
+# estop.wait(1)
 
-esp.stuur_commando("Pneumatic_Sys_ON")
-estop.wait(0.5)
-esp.stuur_commando("CLAMP_3_ON")
-estop.wait(1)
-esp.find_profile_front(max_mm=2000)
-
-while True:
-    text = input('Typ om the beeindigen')
-    esp.move_front_to(int(text))
+# while True:
+#     input('asdf')
 
 
-# ROBOT_IP = "192.168.0.43"
-# HOME = [-0.3401, 0.7702, 0.0946, 0, 0, 0]
-# rest_pos = [-0.191, 0.771-0.1, 0.0961-0.05, 0, 0, 0]
-# robot = URControl(ROBOT_IP)
-# robot.connect()
-# robot.set_tcp(MARKER_ENDEFFECTOR_OFFSET)
+# while True:
+#     text = input('Typ om the beeindigen')
+#     esp.move_front_to(int(text))
 
-# #robot.move_l(rest_pos, speed=0.04)
-# home = robot.get_tcp_pos()
-# print(home)
+
+ROBOT_IP = "192.168.0.43"
+pos2 = HOME.copy()
+pos2[0] += CUTTING_DISTANCE_FROM_CONVEYOR
+pos3 = HOME.copy()
+pos3[0] += CUTTING_DISTANCE_FROM_CONVEYOR
+pos3[3] = -0.5*np.pi
+robot = URControl(ROBOT_IP)
+robot.connect()
+robot.set_tcp(MARKER_ENDEFFECTOR_OFFSET)
+
+#robot.move_l(rest_pos, speed=0.04)
+home = robot.get_tcp_pos()
+print(home)
+robot.move_l(pos2, speed=0.04)
+robot.move_l(pos3, speed=0.04)
       
 '''
 width = 0.02
@@ -47,9 +57,8 @@ thickness = 0.005
 side = 'left'
 
 
-profile = Profile(profiel='Angle', width=0.08, thickness=0.005, length=1.2, height=0.05)
-profile.add_cut(cuttype='type11', position=0, side='right', X=0.02, Y=0.005, Angle=20, H=0.006)
-profile.add_cut(cuttype='type83', position=0.5, side='left')
+profile = Profile(profiel='HP', width=0.08, thickness=0.005, length=1.2, height=0.05)
+profile.add_cut(cuttype='type6', position=0, side='right', Y=10, H=0.006)
 
 # profile = Profile(profiel='Rect', width=0.02, thickness=0.002, length=1.2, height=0.02)
 # profile.add_cut(cuttype='v_cut',  lengthwise=False, side="right")
@@ -59,7 +68,6 @@ profile.add_cut(cuttype='type83', position=0.5, side='left')
 
 # ROBOT PATH TESTING
 ROBOT_IP = "192.168.0.43"
-HOME = [-0.191, 0.771, 0.0961, 0, 0, 0]
 robot = URControl(ROBOT_IP)
 robot.connect()
 robot.set_tcp(MARKER_ENDEFFECTOR_OFFSET)
@@ -69,9 +77,17 @@ cut = CutPath(profile[0], profile)
 cut.make_6d()
 
 planner = RobotPlanner(robot, HOME, profile)
-planner.create_robot_path(cut, offset=0)
+planner.create_robot_path(cut, offset=CUTTING_DISTANCE_FROM_CONVEYOR)
 
-planner.execute_cut()
+#planner.execute_cut()
+node = HOME
+node[0] += CUTTING_DISTANCE_FROM_CONVEYOR
+node2 = node.copy()
+
+node2[4] = -0.5*np.pi
+
+robot.move_l(node, speed=0.07)
+robot.move_l(node2, speed=0.07)
 
 robot.stop_robot_control()
 '''

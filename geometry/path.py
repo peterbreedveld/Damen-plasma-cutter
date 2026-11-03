@@ -86,6 +86,8 @@ class CutPath:
             if node.speed is not None:
                 speed = node.speed
             else:
+                print('thickness is ', node.z)
+                print('so speed becomes:', self.cut_speed*(self.thickness/node.z))
                 speed = self.cut_speed*(self.thickness/node.z)
             
             self.path6d.append(Node(node.x, node.y, node.z, 0, np.pi, 0, speed, ACC, SMOOTHNESS))
