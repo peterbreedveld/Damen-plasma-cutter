@@ -18,19 +18,19 @@ def hp_type6(width, thickness, height=None, Y=0, side='right', H=0.006):
 
     c1 = Node(multiplier*(H+START_OFFSET), width+START_OFFSET, thickness+NOZZLE_DISTANCE)
     c2 = Node(0, width-H, thickness+NOZZLE_DISTANCE)
-    c3 = Node(multiplier*a*(width-H-bulb_width), bulb_width, thickness+NOZZLE_DISTANCE)
-    c4 = Node(multiplier*a*(width-H-bulb_peak_width), bulb_peak_width, bulb_height+NOZZLE_DISTANCE)
-    c5 = Node(multiplier*a*(width-H+START_OFFSET), -START_OFFSET, bulb_height+NOZZLE_DISTANCE)
+    c3 = Node(-multiplier*a*(width-H-bulb_width), bulb_width, thickness+NOZZLE_DISTANCE)
+    c4 = Node(-multiplier*a*(width-H-bulb_peak_width), bulb_peak_width, bulb_height+NOZZLE_DISTANCE)
+    c5 = Node(-multiplier*a*(width-H+START_OFFSET), -START_OFFSET, bulb_height+NOZZLE_DISTANCE)
 
     pad = [c1, c2, c3, c4, c5]
 
 
-    less_offset = a*START_OFFSET if Y<0 else 0
+    less_offset = a*START_OFFSET if Y>0 else 0
 
     if side =='right':
-        offset = max(c.x for c in pad) + less_offset
+        offset = max(c.x for c in pad) - less_offset
     elif side == 'left':
-        offset = min(c.x for c in pad) + less_offset
+        offset = min(c.x for c in pad) - less_offset
             
     for c in pad:
         c.x -= offset
@@ -126,7 +126,7 @@ def angle_type11(width, height, thickness, X, Y, Angle, H=0.006, side='right'):
     elif side == 'left':
         multiplier = 1
 
-    k = tan(Angle*pi/180)*(width-0.006-Y)
+    k = -tan(Angle*pi/180)*(width-0.006-Y)
 
     c1 = Node(multiplier*(START_OFFSET+H), width+START_OFFSET, -NOZZLE_DISTANCE, speed=SAFE_SPEED)
     c2 = Node(0, width-H, -NOZZLE_DISTANCE)
@@ -219,9 +219,10 @@ def rect_v_cut(width, height, thickness=None, lengthwise=True, side="right"):
         
 
     for c in pad:
-        c.x += multiplier*NOZZLE_DISTANCE
+        c.x -= multiplier*START_OFFSET
 
     return pad
+
 
 
 def rect_type85(width, height, A, thickness=None, lenthwise=True, side='right'):

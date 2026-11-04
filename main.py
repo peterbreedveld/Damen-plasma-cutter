@@ -13,9 +13,9 @@ from esp_communication import ESP32Communicator
 
 # TODO nulpositie v_cut gaat nog niet goed
 
-HMI_THEMA = "retro"   # "modern" of "retro" (green phosphor terminal)
+HMI_THEMA = "modern"   # "modern" of "retro" (green phosphor terminal)
 
-# --- Initialiseer robot en overige componenten ---
+# --- Initialiseer robot en overige componenten --- 
 robot = URControl(ROBOT_IP)
 robot.connect()
 robot.set_tcp(MARKER_ENDEFFECTOR_OFFSET)
@@ -24,7 +24,7 @@ esp = ESP32Communicator(port=SERIAL_PORT, pulses_per_mm=ENCODER_STEPS_PER_MM)
 
 # --- Communicatie tussen HMI (hoofdthread) en robotthread ---
 jobs = queue.Queue()         # HMI -> robot. Een opdracht per START, None = afsluiten
-estop = threading.Event()    # wordt gezet bij noodstop; robotthread controleert dit
+estop = threading.Event()    # wordt gezet bij noodstop; robotthread controleert dit 
 laatste_job = {}             # de laatst bevestigde opdracht (profiel_args + cut_args)
 robot_bezig = threading.Event()   # staat aan zolang de robotthread een opdracht uitvoert
 
@@ -125,8 +125,12 @@ def robot_loop():
                 print('Conveyor beweegt tot juiste snijpositie')
                 cut_start = CUTTING_DISTANCE_FROM_CONVEYOR
                 extra_distance = 0
+                stomme_correctie = 0 # Er gaat iets fout, dit is een hotfix
                 if cut_args['side']=='left' and cut_args['cuttype']=='v_cut':
                     extra_distance += 0.1
+                    stomme_correctie = 0.01
+                elif cut_args['side']=='right' and cut_args['cuttype']=='v_cut':
+                    stomme_correctie = -0.01
 
                 if cut_args['side'] == 'right':
                     add = profile[i].cut_width
@@ -135,7 +139,7 @@ def robot_loop():
 
                 overshoot = 0.001 * conveyor_beweegt(
                     esp.move_front_to,
-                    1000*(CUTTING_DISTANCE_FROM_CONVEYOR + END_WASTE + extra_distance + profile[i].at_position + add),
+                    1000*(CUTTING_DISTANCE_FROM_CONVEYOR + END_WASTE + extra_distance + profile[i].at_position + add + stomme_correctie),
                 )
                 print('Moving front to:', (cut_start + END_WASTE + profile[i].at_position + add))
                 estop.wait(1)

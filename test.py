@@ -36,9 +36,9 @@ from geometry.path import CutPath
 
 ROBOT_IP = "192.168.0.43"
 pos2 = HOME.copy()
-pos2[0] += CUTTING_DISTANCE_FROM_CONVEYOR
+pos2[0] += 2*CUTTING_DISTANCE_FROM_CONVEYOR
 pos3 = HOME.copy()
-pos3[0] += CUTTING_DISTANCE_FROM_CONVEYOR
+pos3[0] += 2*CUTTING_DISTANCE_FROM_CONVEYOR
 pos3[3] = -0.5*np.pi
 robot = URControl(ROBOT_IP)
 robot.connect()

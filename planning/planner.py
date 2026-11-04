@@ -92,7 +92,7 @@ class RobotPlanner:
             self.robot.move_l(node, SAFE_SPEED)
             time.sleep(0.1)
 
-        self.robot.move_l(self.robot.cutpath[0][:6], SAFE_SPEED)
+        self.robot.move_l(self.robot_cutpath[0][:6], 0.4 * APPROACH_SPEED)
 
     def execute_cut(self):
         self.robot.move_l_path(self.robot_cutpath)
@@ -100,7 +100,7 @@ class RobotPlanner:
 
     def retreat_cut(self):
         robot_rest_pos = self.robot.add_home(self.home, self.rest_pos)
-        
+
         for node in self.retreat_positions:
             self.robot.move_l(node, SAFE_SPEED)
             time.sleep(0.1)
